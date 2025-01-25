@@ -19,6 +19,8 @@ package net.momirealms.customnameplates.bukkit;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.platform.bukkit.BukkitAudiences;
+import net.kyori.adventure.text.Component;
 import net.momirealms.customnameplates.api.CNPlayer;
 import net.momirealms.customnameplates.api.ConfigManager;
 import net.momirealms.customnameplates.api.CustomNameplates;
@@ -103,6 +105,9 @@ public class BukkitPlatform implements Platform {
                 // some plugins would send null to clear the actionbar, what a bad solution
                 Object component = Optional.ofNullable(Reflections.field$ClientboundSetActionBarTextPacket$text.get(packet)).orElse(Reflections.instance$Component$empty);
                 Object contents = Reflections.method$Component$getContents.invoke(component);
+                if (contents == null) {
+                    return;
+                }
                 if (Reflections.clazz$ScoreContents.isAssignableFrom(contents.getClass())) {
                     //String name = scoreContentNameFunction.apply(Reflections.field$ScoreContents$name.get(contents));
                     String objective = (String) Reflections.field$ScoreContents$objective.get(contents);
@@ -305,15 +310,46 @@ public class BukkitPlatform implements Platform {
                         Object attributeHolder = Reflections.field$ClientboundUpdateAttributesPacket$AttributeSnapshot$attribute.get(attributeSnapshot);
                         Object attribute = Reflections.method$Holder$value.invoke(attributeHolder);
                         String id = (String) Reflections.field$Attribute$id.get(attribute);
-                        if (id.equals("attribute.name.generic.scale")) {
+                        if (id.endsWith("scale")) {
                             double baseValue = (double) Reflections.field$ClientboundUpdateAttributesPacket$AttributeSnapshot$base.get(attributeSnapshot);
                             @SuppressWarnings("unchecked")
                             Collection<Object> modifiers = (Collection<Object>) Reflections.field$ClientboundUpdateAttributesPacket$AttributeSnapshot$modifiers.get(attributeSnapshot);
-                            for (Object modifier : modifiers) {
-                                double amount = (double) Reflections.field$AttributeModifier$amount.get(modifier);
-                                baseValue += amount;
+                            int left = modifiers.size();
+                            if (left > 0) {
+                                for (Object modifier : modifiers) {
+                                    Object operation = Reflections.field$AttributeModifier$operation.get(modifier);
+                                    if (operation == Reflections.instance$AttributeModifier$Operation$ADD_VALUE) {
+                                        double amount = (double) Reflections.field$AttributeModifier$amount.get(modifier);
+                                        baseValue += amount;
+                                        left--;
+                                        if (left == 0) break;
+                                    }
+                                }
                             }
-                            CustomNameplates.getInstance().getUnlimitedTagManager().onPlayerAttributeSet(another, player, baseValue);
+                            double finalValue = baseValue;
+                            if (left > 0) {
+                                for (Object modifier : modifiers) {
+                                    Object operation = Reflections.field$AttributeModifier$operation.get(modifier);
+                                    if (operation == Reflections.instance$AttributeModifier$Operation$ADD_MULTIPLIED_BASE) {
+                                        double amount = (double) Reflections.field$AttributeModifier$amount.get(modifier);
+                                        finalValue += amount * baseValue;
+                                        left--;
+                                        if (left == 0) break;
+                                    }
+                                }
+                            }
+                            if (left > 0) {
+                                for (Object modifier : modifiers) {
+                                    Object operation = Reflections.field$AttributeModifier$operation.get(modifier);
+                                    if (operation == Reflections.instance$AttributeModifier$Operation$ADD_MULTIPLIED_TOTAL) {
+                                        double amount = (double) Reflections.field$AttributeModifier$amount.get(modifier);
+                                        finalValue *= 1.0 + amount;
+                                        left--;
+                                        if (left == 0) break;
+                                    }
+                                }
+                            }
+                            CustomNameplates.getInstance().getUnlimitedTagManager().onPlayerAttributeSet(another, player, finalValue);
                             return;
                         }
                     }
