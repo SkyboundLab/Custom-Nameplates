@@ -17,8 +17,12 @@
 
 package net.momirealms.customnameplates.api.feature.bubble;
 
+import net.momirealms.customnameplates.api.feature.PreParsedDynamicText;
 import net.momirealms.customnameplates.api.util.Vector3;
 
+/**
+ * Bubble configuration
+ */
 public interface BubbleConfig {
 
     /**
@@ -61,14 +65,14 @@ public interface BubbleConfig {
      *
      * @return the text prefix
      */
-    String textPrefix();
+    PreParsedDynamicText textPrefix();
 
     /**
      * Returns the text suffix to be applied after the Bubble content.
      *
      * @return the text suffix
      */
-    String textSuffix();
+    PreParsedDynamicText textSuffix();
 
     /**
      * Returns the display name of the Bubble.

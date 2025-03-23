@@ -20,6 +20,8 @@ package net.momirealms.customnameplates.bukkit.util;
 import net.momirealms.customnameplates.api.helper.VersionHelper;
 import net.momirealms.customnameplates.common.util.ReflectionUtils;
 
+import java.util.Objects;
+
 public class EntityDataValue {
 
     private static int internalID = 0;
@@ -103,7 +105,7 @@ public class EntityDataValue {
     }
 
     private static Object initSerializersByName(String name) throws ReflectiveOperationException {
-        return ReflectionUtils.getDeclaredField(Reflections.clazz$EntityDataSerializers, new String[]{fieldsObf[internalID++], name}).get(null);
+        return Objects.requireNonNull(ReflectionUtils.getDeclaredField(Reflections.clazz$EntityDataSerializers, new String[]{fieldsObf[internalID++], name}).get(null));
     }
 
     private EntityDataValue() {
@@ -112,7 +114,7 @@ public class EntityDataValue {
 
     public static Object create(int id, Object serializer, Object value) {
         try {
-            Object entityDataAccessor =Reflections.constructor$EntityDataAccessor.newInstance(id, serializer);
+            Object entityDataAccessor = Reflections.constructor$EntityDataAccessor.newInstance(id, serializer);
             return Reflections.method$SynchedEntityData$DataValue$create.invoke(null, entityDataAccessor, value);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);

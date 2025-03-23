@@ -44,6 +44,7 @@ import net.momirealms.customnameplates.bukkit.compatibility.quest.TypeWriterList
 import net.momirealms.customnameplates.bukkit.compatibility.region.WorldGuardRegion;
 import net.momirealms.customnameplates.bukkit.requirement.BukkitRequirementManager;
 import net.momirealms.customnameplates.bukkit.scheduler.BukkitSchedulerAdapter;
+import net.momirealms.customnameplates.bukkit.util.Reflections;
 import net.momirealms.customnameplates.bukkit.util.SimpleLocation;
 import net.momirealms.customnameplates.common.dependency.Dependency;
 import net.momirealms.customnameplates.common.dependency.DependencyManagerImpl;
@@ -61,6 +62,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.*;
@@ -127,6 +129,7 @@ public class BukkitCustomNameplates extends CustomNameplates implements Listener
                         Dependency.LWJGL, Dependency.LWJGL_NATIVES, Dependency.LWJGL_FREETYPE, Dependency.LWJGL_FREETYPE_NATIVES
                 )
         );
+        Reflections.load();
     }
 
     @Override
@@ -177,17 +180,6 @@ public class BukkitCustomNameplates extends CustomNameplates implements Listener
         this.playerListeners.add((PlayerListener) unlimitedTagManager);
         this.chatManager.registerListener((ChatListener) bubbleManager);
 
-        Bukkit.getPluginManager().registerEvents(this, getBootstrap());
-
-        this.commandManager.registerDefaultFeatures();
-        this.reload();
-
-        this.loaded = true;
-
-        if (ConfigManager.metrics()) new Metrics(getBootstrap(), 16649);
-        if (ConfigManager.generateOnStart()) {
-            this.resourcePackManager.generate();
-        }
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new NameplatesExpansion(this).register();
             new NameplatesExtraExpansion(this).register();
@@ -207,6 +199,16 @@ public class BukkitCustomNameplates extends CustomNameplates implements Listener
         if (Bukkit.getPluginManager().isPluginEnabled("Typewriter")) {
             TypeWriterListener listener = new TypeWriterListener(this);
             Bukkit.getPluginManager().registerEvents(listener, this.getBootstrap());
+        }
+
+        this.reload();
+        this.loaded = true;
+        Bukkit.getPluginManager().registerEvents(this, getBootstrap());
+        this.commandManager.registerDefaultFeatures();
+
+        if (ConfigManager.metrics()) new Metrics(getBootstrap(), 16649);
+        if (ConfigManager.generateOnStart()) {
+            this.resourcePackManager.generate();
         }
 
         if (VersionHelper.isFolia()) {
@@ -359,7 +361,7 @@ public class BukkitCustomNameplates extends CustomNameplates implements Listener
         return instance;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         handleJoin(player);
@@ -385,7 +387,7 @@ public class BukkitCustomNameplates extends CustomNameplates implements Listener
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         CNPlayer cnPlayer = onlinePlayerMap.remove(player.getUniqueId());

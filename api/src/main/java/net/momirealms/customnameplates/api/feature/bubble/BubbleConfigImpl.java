@@ -17,30 +17,46 @@
 
 package net.momirealms.customnameplates.api.feature.bubble;
 
+import net.momirealms.customnameplates.api.feature.PreParsedDynamicText;
 import net.momirealms.customnameplates.api.util.Vector3;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * Implementation of the BubbleConfig interface
+ */
 public class BubbleConfigImpl implements BubbleConfig {
-
     private final String id;
     private final int backgroundColor;
     private final int lineWidth;
     private final int maxLines;
     private final Bubble[] bubbles;
-    private final String textPrefix;
-    private final String textSuffix;
+    private final PreParsedDynamicText textPrefix;
+    private final PreParsedDynamicText textSuffix;
     private final String displayName;
     private final Vector3 scale;
 
+    /**
+     * Constructs a new BubbleConfigImpl.
+     *
+     * @param id            the unique ID for the bubble configuration
+     * @param displayName   the name to be displayed for the bubble configuration
+     * @param backgroundColor the background color for the bubble (in integer format)
+     * @param lineWidth     the line width for the bubble display
+     * @param maxLines      the maximum number of lines that can be displayed in the bubble
+     * @param bubbles       an array of Bubble objects representing the actual bubbles
+     * @param textPrefix    a prefix that will be added before the text in the bubble
+     * @param textSuffix    a suffix that will be added after the text in the bubble
+     * @param scale         the scale of the bubble display (as a Vector3)
+     */
     public BubbleConfigImpl(String id, String displayName, int backgroundColor, int lineWidth, int maxLines, Bubble[] bubbles, String textPrefix, String textSuffix, Vector3 scale) {
         this.backgroundColor = backgroundColor;
         this.lineWidth = lineWidth;
         this.maxLines = maxLines;
         this.id = id;
         this.bubbles = requireNonNull(bubbles);
-        this.textPrefix = requireNonNull(textPrefix);
-        this.textSuffix = requireNonNull(textSuffix);
+        this.textPrefix = new PreParsedDynamicText(requireNonNull(textPrefix), true);
+        this.textSuffix = new PreParsedDynamicText(requireNonNull(textSuffix), true);
         this.displayName = requireNonNull(displayName);
         this.scale = requireNonNull(scale);
     }
@@ -71,12 +87,12 @@ public class BubbleConfigImpl implements BubbleConfig {
     }
 
     @Override
-    public String textPrefix() {
+    public PreParsedDynamicText textPrefix() {
         return textPrefix;
     }
 
     @Override
-    public String textSuffix() {
+    public PreParsedDynamicText textSuffix() {
         return textSuffix;
     }
 
@@ -90,8 +106,10 @@ public class BubbleConfigImpl implements BubbleConfig {
         return scale;
     }
 
+    /**
+     * Builder implementation for creating BubbleConfigImpl instances.
+     */
     public static class BuilderImpl implements Builder {
-
         private int backgroundColor;
         private int lineWidth;
         private int maxLines;
